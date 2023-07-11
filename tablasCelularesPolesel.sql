@@ -322,3 +322,61 @@ VALUES
 SELECT * FROM factura;
 SELECT * FROM audits;
 
+SET AUTOCOMMIT = 0;
+
+START TRANSACTION;
+
+-- Insertar un nuevo registro en la tabla celular
+INSERT INTO celular (modelo, precio, en_reparacion, ID_vendedor, ID_cliente)
+VALUES ('Nuevo Modelo', 100.00, FALSE, 1, 1);
+
+-- Obtener el último ID_celular insertado
+SET @ultimoIDCelular = LAST_INSERT_ID();
+
+-- Obtener el ID_cliente correspondiente al nuevo registro
+SET @clienteID = (SELECT ID_cliente FROM celular WHERE ID_celular = @ultimoIDCelular);
+
+-- Llamar a la función agradecerCompra() con el ID_cliente obtenido
+SELECT agradecerCompra(@clienteID);
+
+COMMIT;
+
+START TRANSACTION;
+
+-- Insertar un nuevo registro en la tabla celular
+INSERT INTO celular (modelo, precio, en_reparacion, ID_vendedor, ID_cliente)
+VALUES ('Nuevo Modelo', 100.00, FALSE, 1, 1);
+
+-- Obtener el último ID_celular insertado
+SET @ultimoIDCelular = LAST_INSERT_ID();
+
+-- Insertar un nuevo registro en la tabla extra con el ID_celular correspondiente
+INSERT INTO extra (tipoDeExtra, precioExtra, ID_celular)
+VALUES ('Nuevo Extra', 50.00, @ultimoIDCelular);
+
+-- Obtener el último ID_extra insertado
+SET @ultimoIDextra = LAST_INSERT_ID();
+
+-- Obtener el precio extra relacionado al último registro insertado en la tabla extra
+SELECT obtenerPrecioTotalExtra(@ultimoIDextra);
+
+COMMIT;
+
+-- Crea el usuario vendedorJuan
+CREATE USER 'vendedorJuan'@'localhost' IDENTIFIED BY 'contraseña'; -- Reemplaza 'contraseña' por la contraseña deseada para el usuario
+
+-- Asigna permisos de solo lectura al usuario vendedorJuan en todas las tablas de celularespolesel
+GRANT SELECT ON celularespolesel.* TO 'vendedorJuan'@'localhost';
+
+-- No permite al usuario vendedorJuan eliminar registros de ninguna tabla
+REVOKE DELETE ON celularespolesel.* FROM 'vendedorJuan'@'localhost';
+
+-- Crea el usuario vendedorJavier
+CREATE USER 'vendedorJavier'@'localhost' IDENTIFIED BY 'contraseña'; -- Reemplaza 'contraseña' por la contraseña deseada para el usuario
+
+-- Asigna permisos de lectura, inserción y modificación al usuario vendedorJavier en todas las tablas de celularespolesel
+GRANT SELECT, INSERT, UPDATE ON celularespolesel.* TO 'vendedorJavier'@'localhost';
+
+-- No permite al usuario vendedorJavier eliminar registros de ninguna tabla
+REVOKE DELETE ON celularespolesel.* FROM 'vendedorJavier'@'localhost';
+
